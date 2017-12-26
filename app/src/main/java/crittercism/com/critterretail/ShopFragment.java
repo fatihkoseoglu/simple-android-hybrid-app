@@ -2,6 +2,7 @@ package crittercism.com.critterretail;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.KeyEvent;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 
 import com.crittercism.app.Crittercism;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ShopFragment extends Fragment {
@@ -96,6 +98,8 @@ public class ShopFragment extends Fragment {
         mDbHelper = new DatabaseHelper(getActivity().getApplicationContext());
 
         /* Placeholder 1 */
+        mWebView = (WebView) rootView.findViewById(R.id.shop_webview);
+
 
         // override the 'back' button to go back in the webview when appropriate
         mWebView.setOnKeyListener(new View.OnKeyListener() {
@@ -111,10 +115,31 @@ public class ShopFragment extends Fragment {
 
         // load our site on view create
         /* Placeholder 2 */
+        mWebView.loadUrl(APIRequest.BASE_URL);
 
         // listen for custom URL schemes
         mWebView.setWebViewClient(new WebViewClient() {
             /* Placeholder 3 */
+
+            @Override
+            //apprequest://addtocart#{{p.productJSON}}
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url.startsWith("apprequest://")){
+                    Uri uri = Uri.parse(url);
+
+                    String command = uri.getHost(); // ex: addtocart
+                    String jsonString = uri.getFragment(); // ex: {'itemID': 1}
+
+                    try{
+                        JSONObject json = new JSONObject(jsonString);
+                        handleRequest(command, json);
+                    } catch (JSONException e) {
+                        Crittercism.logHandledException(e);
+                    }
+                    return true;
+                }
+                return false;
+            }
         });
 
 
